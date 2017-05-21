@@ -47,6 +47,13 @@ includeFile("groups/bestine_election/bestine_election_tusken_loot.lua")
 includeFile("groups/bestine_election/bestine_election_tusken_quest.lua")
 includeFile("groups/bestine_election/bestine_election_victor_visalis_rewards.lua")
 
+-- corellian_corvette sub-folder
+includeFile("groups/corellian_corvette/imperial_corvette_loot.lua")
+includeFile("groups/corellian_corvette/neutral_corvette_loot.lua")
+includeFile("groups/corellian_corvette/rebel_corvette_loot.lua")
+includeFile("groups/corellian_corvette/disk_loot.lua")
+includeFile("groups/corellian_corvette/r2droid_loot.lua")
+
 -- creature sub-folder
 includeFile("groups/creature/brackaset_common.lua")
 includeFile("groups/creature/fambaa_common.lua")
@@ -85,6 +92,9 @@ includeFile("groups/forage/forage_food.lua")
 includeFile("groups/forage/forage_live_creatures.lua")
 includeFile("groups/forage/forage_medical_component.lua")
 includeFile("groups/forage/forage_rare.lua")
+
+-- generic_quests sub-folder
+includeFile("groups/generic_quests/generic_quests_businessman_expired_ticket.lua")
 
 -- geonosian_lab sub-folder
 includeFile("groups/geonosian_lab/acklay.lua")

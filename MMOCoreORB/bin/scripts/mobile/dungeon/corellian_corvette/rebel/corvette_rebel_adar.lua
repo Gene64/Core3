@@ -1,4 +1,4 @@
-adar = Creature:new {
+corvette_rebel_adar = Creature:new {
 	objectName = "@npc_name:human_base_male",
 	customName = "Adar Tallon",
 	socialGroup = "rebel",
@@ -23,15 +23,15 @@ adar = Creature:new {
 	ferocity = 0,
 	pvpBitmask = NONE,
 	creatureBitmask = PACK,
-	optionsBitmask = AIENABLED,
+	optionsBitmask = AIENABLED + CONVERSABLE + INTERESTING + INVULNERABLE,
 	diet = HERBIVORE,
 
 	templates = {"object/mobile/dressed_corvette_rebel_adar.iff"},
 	lootGroups = {},
 	weapons = {},
-	conversationTemplate = "",
+	conversationTemplate = "corvetteTallonConvoTemplate",
 	attacks = {
 	}
 }
 
-CreatureTemplates:addCreatureTemplate(adar, "adar")
+CreatureTemplates:addCreatureTemplate(corvette_rebel_adar, "corvette_rebel_adar")

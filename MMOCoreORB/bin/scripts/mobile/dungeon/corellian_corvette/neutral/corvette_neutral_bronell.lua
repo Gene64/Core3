@@ -1,8 +1,8 @@
-sabol = Creature:new {
+corvette_neutral_bronell = Creature:new {
 	objectName = "",
-	customName = "Lt. Sabol",
-	socialGroup = "imperial",
-	faction = "imperial",
+	customName = "Bronell",
+	socialGroup = "jabba",
+	faction = "jabba",
 	level = 100,
 	chanceHit = 1,
 	damageMin = 645,
@@ -23,15 +23,14 @@ sabol = Creature:new {
 	ferocity = 0,
 	pvpBitmask = NONE,
 	creatureBitmask = PACK,
-	optionsBitmask = AIENABLED,
+	optionsBitmask = AIENABLED + CONVERSABLE + INTERESTING + INVULNERABLE,
 	diet = HERBIVORE,
 
-	templates = {"object/mobile/dressed_corvette_imperial_sabol.iff"},
+	templates = {"object/mobile/dressed_corvette_neutral_bronell.iff"},
 	lootGroups = {},
 	weapons = {},
-	conversationTemplate = "",
-	attacks = {
-	}
+	conversationTemplate = "corvetteBronellConvoTemplate",
+	attacks = {}
 }
 
-CreatureTemplates:addCreatureTemplate(sabol, "sabol")
+CreatureTemplates:addCreatureTemplate(corvette_neutral_bronell, "corvette_neutral_bronell")
