@@ -5,14 +5,6 @@ corvetteSabolConvoTemplate = ConvoTemplate:new {
 	screens = {}
 }
 
-no_business = ConvoScreen:new {
-	id = "no_business",
-	leftDialog = "@conversation/corvette_sabol_imperial1:s_d07a7370", -- If I had my way, all Rebel officers would be shot on sight. We have spies to tell us everything we need to know about what the Rebel Alliance is planning. The only thing I'd want from a Rebel officer would be their demise.
-	stopConversation = "true",
-	options = {}
-}
-corvetteSabolConvoTemplate:addScreen(no_business);
-
 no_faction = ConvoScreen:new {
 	id = "no_faction",
 	leftDialog = "@conversation/corvette_sabol_imperial1:s_69693bca", --Must you interrupt me? I cannot make time for those unwilling to declare allegiance to the Empire. Please leave me be until your loyalties become clearer.
@@ -23,7 +15,7 @@ corvetteSabolConvoTemplate:addScreen(no_faction);
 
 already_busy = ConvoScreen:new {
 	id = "already_busy",
-	leftDialog = "@conversation/corvette_sabol_imperial1:s_74947555	", --Typical... I actually need some assistance, and they send me someone who can't help me. You're already busy. What was the point. Come back when you've finished your current task and maybe, assuming it's not too late, you could still be of use.
+	leftDialog = "@conversation/corvette_sabol_imperial1:s_74947555", --Typical... I actually need some assistance, and they send me someone who can't help me. You're already busy. What was the point. Come back when you've finished your current task and maybe, assuming it's not too late, you could still be of use.
 	stopConversation = "true",
 	options = {}
 }
@@ -34,8 +26,8 @@ convo_start = ConvoScreen:new {
 	leftDialog = "@conversation/corvette_sabol_imperial1:s_145e07df", --Idiots! Complete and utter idiots! How can I complete my tasks when my commanding officers are nothing but fools! I... Excuse me. I didn't see you standing there. Well... what do you want? I'm very busy as you can see.
 	stopConversation = "false",
 	options = {
-		{"@conversation/corvette_sabol_imperial1:s_3098b584	","convo_start_2"}, --You said something about tasks.	
-		{"@conversation/corvette_sabol_imperial1:s_4c16d4f","convo_exit"} --Ah, nothing. My apologies for disturbing you.	
+		{"@conversation/corvette_sabol_imperial1:s_3098b584	","convo_start_2"}, --You said something about tasks.
+		{"@conversation/corvette_sabol_imperial1:s_4c16d4f","convo_exit"} --Ah, nothing. My apologies for disturbing you.
 	}
 }
 corvetteSabolConvoTemplate:addScreen(convo_start);
@@ -88,7 +80,7 @@ corvetteSabolConvoTemplate:addScreen(convo_exit_3);
 
 convo_start_4 = ConvoScreen:new {
 	id = "convo_start_4",
-	leftDialog = "@conversation/corvette_sabol_imperial1:s_963fc82f", ----I have some data on where this document might be found. Let me check my datapad. Hmm... Only three locations. Unfortunately I have nothing that gives us a hint about which might be the one with the document we seek. It could be at any of these places. Are you still interested in assisting me?
+	leftDialog = "@conversation/corvette_sabol_imperial1:s_963fc82f", --I have some data on where this document might be found. Let me check my datapad. Hmm... Only three locations. Unfortunately I have nothing that gives us a hint about which might be the one with the document we seek. It could be at any of these places. Are you still interested in assisting me?
 	stopConversation = "false",
 	options = {
 		{"@conversation/corvette_sabol_imperial1:s_b9bb7669	","quest_start"}, --Yes, of course. I'll check all three if need be.
@@ -107,7 +99,7 @@ corvetteSabolConvoTemplate:addScreen(convo_exit_4);
 
 quest_start = ConvoScreen:new {
 	id = "quest_start",
-		leftDialog = "@conversation/corvette_sabol_imperial1:s_3e470c42", --Excellent. The document we seek can be found at any one of these locations: at the Rebel base on Dantooine, in the Afarathu cave on Corellia, and on a cruise liner... the Star Tours Tzarina.
+	leftDialog = "@conversation/corvette_sabol_imperial1:s_3e470c42", --Excellent. The document we seek can be found at any one of these locations: at the Rebel base on Dantooine, in the Afarathu cave on Corellia, and on a cruise liner... the Star Tours Tzarina.
 	stopConversation = "false",
 	options = {	}
 }
@@ -171,7 +163,7 @@ corvetteSabolConvoTemplate:addScreen(back_already);
 
 back_already_reset = ConvoScreen:new {
 	id = "back_already_reset",
-	leftDialog = "@conversation/corvette_sabol_imperial1:s_1bb4597", --I will gladly clear the records of your progress and confiscate all documents pertaining to this mission. I will also immediately report this to my superiors. Run, run far away or I will have my troopers arrest you for treason.	
+	leftDialog = "@conversation/corvette_sabol_imperial1:s_1bb4597", --I will gladly clear the records of your progress and confiscate all documents pertaining to this mission. I will also immediately report this to my superiors. Run, run far away or I will have my troopers arrest you for treason.
 	stopConversation = "true",
 	options = { }
 }

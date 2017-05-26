@@ -32,13 +32,6 @@ void BountyMissionObjectiveImplementation::activate() {
 
 	MissionObjectiveImplementation::activate();
 
-	// Destroy existing npc target and start a new task
-	if (getObserverCount() == 2) {
-		removeNpcTargetObservers();
-		startNpcTargetTask();
-		return;
-	}
-
 	if (isPlayerTarget()) {
 		if (!addPlayerTargetObservers()) {
 			getPlayerOwner()->sendSystemMessage("@mission/mission_generic:failed"); // Mission failed
@@ -47,6 +40,10 @@ void BountyMissionObjectiveImplementation::activate() {
 		}
 	} else {
 		startNpcTargetTask();
+
+		if (getObserverCount() == 2 && npcTarget == NULL) {
+			removeNpcTargetObservers();
+		}
 	}
 }
 
@@ -61,6 +58,12 @@ void BountyMissionObjectiveImplementation::deactivate() {
 		}
 
 		activeDroid = NULL;
+	}
+
+	cancelAllTasks();
+
+	if (!isPlayerTarget()) {
+		removeNpcTargetObservers();
 	}
 }
 
@@ -534,7 +537,8 @@ void BountyMissionObjectiveImplementation::startNpcTargetTask() {
 	if(mission == NULL)
 		return;
 
-	targetTask = new BountyHunterTargetTask(mission, getPlayerOwner(), mission->getEndPlanet());
+	if (targetTask == NULL)
+		targetTask = new BountyHunterTargetTask(mission, getPlayerOwner(), mission->getEndPlanet());
 
 	if (targetTask != NULL && !targetTask->isScheduled()) {
 		targetTask->schedule(10 * 1000);

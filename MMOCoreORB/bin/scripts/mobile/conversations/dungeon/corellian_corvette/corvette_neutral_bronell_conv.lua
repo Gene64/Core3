@@ -5,14 +5,6 @@ corvetteBronellConvoTemplate = ConvoTemplate:new {
 	screens = {}
 }
 
-no_business = ConvoScreen:new {
-	id = "no_business",
-	leftDialog = "@conversation/corvette_bronell_neutral_assassin:s_382a91bd", -- I have no business with you at this time... and by that I mean Lord Jabba the Hutt has no need for me to do business with you at this time. Perhaps in the future, but not now.
-	stopConversation = "true",
-	options = {}
-}
-corvetteBronellConvoTemplate:addScreen(no_business);
-
 already_busy = ConvoScreen:new {
 	id = "already_busy",
 	leftDialog = "@conversation/corvette_bronell_neutral_assassin:s_dc53bb6d", -- Oh, well I could use your help, but I see that you're already busy. Come back when you've finished your current task and maybe we can do business.
@@ -27,7 +19,7 @@ convo_start = ConvoScreen:new {
 	stopConversation = "false",
 	options = {
 		{"@conversation/corvette_bronell_neutral_assassin:s_d62f7d90","convo_start_2"}, -- Depends, tell me about this mission?
-		{"@conversation/corvette_bronell_neutral_assassin:s_bd40a944","convo_exit"} -- Sorry, I have other things to do.	
+		{"@conversation/corvette_bronell_neutral_assassin:s_bd40a944","convo_exit"} -- Sorry, I have other things to do.
 	}
 }
 corvetteBronellConvoTemplate:addScreen(convo_start);
@@ -231,8 +223,8 @@ changed_mind = ConvoScreen:new {
 }
 corvetteBronellConvoTemplate:addScreen(changed_mind);
 
-earned_reward = ConvoScreen:new {
-	id = "earned_reward",
+reward = ConvoScreen:new {
+	id = "reward",
 	leftDialog = "@conversation/corvette_bronell_neutral_assassin:s_1779cf3b", -- Lord Jabba is pleased to hear that the CorSec officer has been eliminated. Let this be a lesson to all who fail to pay their debts to Lord Jabba the Hutt, yes? Are you here to receive your reward, yes?
 	stopConversation = "false",
 	options = {
@@ -240,11 +232,11 @@ earned_reward = ConvoScreen:new {
 		{"@conversation/corvette_bronell_neutral_assassin:s_ffc988c3","ill_be_back"} --  No, not just yet. I'll be back.
 	}
 }
-corvetteBronellConvoTemplate:addScreen(earned_reward);
+corvetteBronellConvoTemplate:addScreen(reward);
 
 ill_be_back = ConvoScreen:new {
 	id = "ill_be_back",
-	leftDialog = "@conversation/corvette_bronell_neutral_assassin:s_44fa5eb9", --As you wish. Though I do not understand why you'd want to delay, yes? 
+	leftDialog = "@conversation/corvette_bronell_neutral_assassin:s_44fa5eb9", --As you wish. Though I do not understand why you'd want to delay, yes?
 	stopConversation = "true",
 	options = {	}
 }

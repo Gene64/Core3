@@ -1,5 +1,4 @@
 tallonIntel = {
-	containerIds = {4465363, 4105801, 4355510 }, -- -525 -3870 dantooine; 3658 2184 lok; -6354 749 dathomir 
 	itemTemplates = { "object/tangible/loot/dungeon/corellian_corvette/rebel_rescue_filler01.iff", "object/tangible/loot/dungeon/corellian_corvette/rebel_rescue_filler02.iff", "object/tangible/loot/dungeon/corellian_corvette/rebel_rescue_intel.iff" },
 }
 
@@ -10,7 +9,6 @@ tallonCompensation = { { compType = "faction", amount = 100 } }
 tallon = { planetName = "corellia", npcTemplate = "corvette_rebel_adar", x = -5448.03, z = 21, y = -2674.92, direction = 163, cellID = 0, position = STAND }
 
 ticketGivertallon = CorvetteTicketGiverLogic:new {
-	numberOfActs = 1,
 	npc = tallon,
 	intelMap = tallonIntel,
 	ticketInfo = tallonTicketInfo,
@@ -35,7 +33,7 @@ ticketGivertallon = CorvetteTicketGiverLogic:new {
 	good_intel = "@conversation/corvette_tallon_rebel1:s_135bf1fb", --Show the Security Override Codes.
 
 	go_to_corvette = "@conversation/corvette_tallon_rebel1:s_67499366",--I am leaving for the Corellian corvette.
-	check_other_places = "@conversation/corvette_tallon_rebel1:	", --Looks like I have more to do.
+	check_other_places = "@conversation/corvette_tallon_rebel1:s_a128e067", --Looks like I have more to do.
 	other_documents = "@conversation/corvette_tallon_rebel1:s_2f26b4c4", -- I still have documents for you.
 
 	launch_location ="@conversation/corvette_tallon_rebel1:s_3925fbc0", --I forgot the location of our contact.
@@ -49,6 +47,6 @@ ticketGiverTallonConvoHandler = CorvetteTicketGiverConvoHandler:new {
 	ticketGiver = ticketGivertallon
 }
 
-tallonIntelSearchMenuComponent = IntelSearchMenuComponent:new {
+tallonIntelSearchMenuComponent = CorvetteIntelSearchMenuComponent:new {
 	ticketGiver = ticketGivertallon
 }

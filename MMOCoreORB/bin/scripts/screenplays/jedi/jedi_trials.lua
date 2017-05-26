@@ -29,7 +29,7 @@ function JediTrials:isEligibleForPadawanTrials(pPlayer)
 
 	local learnedBranches = VillageJediManagerCommon.getLearnedForceSensitiveBranches(pPlayer)
 
-	return CreatureObject(pPlayer):hasScreenPlayState(32, "VillageJediProgression") and not CreatureObject(pPlayer):hasSkill("force_title_jedi_rank_02") and learnedBranches >= 6
+	return CreatureObject(pPlayer):hasScreenPlayState(32, "VillageJediProgression") and not CreatureObject(pPlayer):hasSkill("force_title_jedi_rank_02") and learnedBranches >= 6 and tonumber(readScreenPlayData(pPlayer, "PadawanTrials", "completedTrials")) ~= 1
 end
 
 function JediTrials:isOnPadawanTrials(pPlayer)
@@ -37,7 +37,7 @@ function JediTrials:isOnPadawanTrials(pPlayer)
 		return false
 	end
 
-	return tonumber(readScreenPlayData(pPlayer, "PadawanTrials", "startedTrials")) == 1
+	return tonumber(readScreenPlayData(pPlayer, "PadawanTrials", "startedTrials")) == 1 and tonumber(readScreenPlayData(pPlayer, "PadawanTrials", "completedTrials")) ~= 1
 end
 
 function JediTrials:isEligibleForKnightTrials(pPlayer)
@@ -45,7 +45,7 @@ function JediTrials:isEligibleForKnightTrials(pPlayer)
 		return false
 	end
 
-	if (CreatureObject(pPlayer):hasSkill("force_rank_light_novice") or CreatureObject(pPlayer):hasSkill("force_rank_dark_novice")) then
+	if (CreatureObject(pPlayer):hasSkill("force_rank_light_novice") or CreatureObject(pPlayer):hasSkill("force_rank_dark_novice")) or tonumber(readScreenPlayData(pPlayer, "KnightTrials", "completedTrials")) == 1 then
 		return false
 	end
 
@@ -57,10 +57,18 @@ function JediTrials:isOnKnightTrials(pPlayer)
 		return false
 	end
 
-	return tonumber(readScreenPlayData(pPlayer, "KnightTrials", "startedTrials")) == 1
+	return tonumber(readScreenPlayData(pPlayer, "KnightTrials", "startedTrials")) == 1 and tonumber(readScreenPlayData(pPlayer, "KnightTrials", "completedTrials")) ~= 1
 end
 
 function JediTrials:onPlayerLoggedIn(pPlayer)
+	if (CreatureObject(pPlayer):hasSkill("force_title_jedi_rank_02") and tonumber(readScreenPlayData(pPlayer, "PadawanTrials", "completedTrials")) ~= 1) then
+		writeScreenPlayData(pPlayer, "PadawanTrials", "completedTrials", 1)
+	end
+
+	if (CreatureObject(pPlayer):hasSkill("force_title_jedi_rank_03") and tonumber(readScreenPlayData(pPlayer, "KnightTrials", "completedTrials")) ~= 1) then
+		writeScreenPlayData(pPlayer, "KnightTrials", "completedTrials", 1)
+	end
+
 	if (self:isOnPadawanTrials(pPlayer) or self:isOnKnightTrials(pPlayer)) then
 		dropObserver(SKILLREMOVED, "JediTrials", "droppedSkillDuringTrials", pPlayer)
 		createObserver(SKILLREMOVED, "JediTrials", "droppedSkillDuringTrials", pPlayer)
@@ -117,6 +125,7 @@ function JediTrials:unlockJediPadawan(pPlayer)
 	end
 
 	awardSkill(pPlayer, "force_title_jedi_rank_02")
+	writeScreenPlayData(pPlayer, "PadawanTrials", "completedTrials", 1)
 
 	CreatureObject(pPlayer):playEffect("clienteffect/trap_electric_01.cef", "")
 	CreatureObject(pPlayer):playMusicMessage("sound/music_become_jedi.snd")
@@ -152,7 +161,7 @@ function JediTrials:unlockJediKnight(pPlayer)
 	if (councilType == self.COUNCIL_LIGHT) then
 		unlockMusic = "sound/music_become_dark_light.snd"
 		unlockString = "@jedi_trials:knight_trials_completed_light"
-		enclaveLoc = { 5079, 305, "yavin4" }
+		enclaveLoc = { -5575, 4905, "yavin4" }
 		enclaveName = "Light Jedi Enclave"
 		jediState = 4
 		setFactionVal = FACTIONREBEL
@@ -160,7 +169,7 @@ function JediTrials:unlockJediKnight(pPlayer)
 	elseif (councilType == self.COUNCIL_DARK) then
 		unlockMusic = "sound/music_become_dark_dark.snd"
 		unlockString = "@jedi_trials:knight_trials_completed_dark"
-		enclaveLoc = { -5575, 4905, "yavin4" }
+		enclaveLoc = { 5079, 305, "yavin4" }
 		enclaveName = "Dark Jedi Enclave"
 		jediState = 8
 		setFactionVal = FACTIONIMPERIAL
@@ -171,6 +180,7 @@ function JediTrials:unlockJediKnight(pPlayer)
 	end
 
 	awardSkill(pPlayer, "force_title_jedi_rank_03")
+	writeScreenPlayData(pPlayer, "KnightTrials", "completedTrials", 1)
 	awardSkill(pPlayer, skillName)
 	CreatureObject(pPlayer):playMusicMessage(unlockMusic)
 	playClientEffectLoc(CreatureObject(pPlayer):getObjectID(), "clienteffect/trap_electric_01.cef", CreatureObject(pPlayer):getZoneName(), CreatureObject(pPlayer):getPositionX(), CreatureObject(pPlayer):getPositionZ(), CreatureObject(pPlayer):getPositionY(), CreatureObject(pPlayer):getParentID())
@@ -383,9 +393,23 @@ end
 
 function JediTrials:getTrialsCompleted(pPlayer)
 	if (self:isOnPadawanTrials(pPlayer)) then
-		return tonumber(readScreenPlayData(pPlayer, "PadawanTrials", "trialsCompleted"))
+		local completed = tonumber(readScreenPlayData(pPlayer, "PadawanTrials", "trialsCompleted"))
+
+		if (completed == nil) then
+			writeScreenPlayData(pPlayer, "PadawanTrials", "trialsCompleted", 0)
+			return 0
+		else
+			return completed
+		end
 	elseif (self:isOnKnightTrials(pPlayer)) then
-		return  tonumber(readScreenPlayData(pPlayer, "KnightTrials", "trialsCompleted"))
+		local completed = tonumber(readScreenPlayData(pPlayer, "KnightTrials", "trialsCompleted"))
+
+		if (completed == nil) then
+			writeScreenPlayData(pPlayer, "KnightTrials", "trialsCompleted", 0)
+			return 0
+		else
+			return completed
+		end
 	else
 		return 0
 	end
