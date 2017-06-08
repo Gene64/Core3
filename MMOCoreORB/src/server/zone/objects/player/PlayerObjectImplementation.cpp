@@ -12,6 +12,7 @@
 #include "server/zone/managers/combat/CombatManager.h"
 #include "server/zone/managers/structure/StructureManager.h"
 #include "server/zone/managers/vendor/VendorManager.h"
+#include "server/zone/managers/frs/FrsManager.h"
 #include "server/chat/ChatManager.h"
 #include "server/chat/room/ChatRoom.h"
 #include "server/chat/PersistentMessage.h"
@@ -253,6 +254,24 @@ void PlayerObjectImplementation::unload() {
 
 	_this.getReferenceUnsafeStaticCast()->printReferenceHolders();
 	creature->printReferenceHolders();*/
+}
+
+int PlayerObjectImplementation::calculateBhReward() {
+	int minReward = 25000; // Minimum reward for a player bounty
+	int maxReward = 250000; // Maximum reward for a player bounty
+
+	int reward = minReward;
+
+	int skillPoints = getSpentJediSkillPoints();
+
+	reward = skillPoints * 1000;
+
+	if (reward < minReward)
+		reward = minReward;
+	else if (reward > maxReward)
+		reward = maxReward;
+
+	return reward;
 }
 
 void PlayerObjectImplementation::sendBaselinesTo(SceneObject* player) {
@@ -1234,11 +1253,19 @@ void PlayerObjectImplementation::notifyOnline() {
 		parent->sendMessage(sui->generateMessage());
 	}
 
-	//Login to visibility manager
-	VisibilityManager::instance()->login(playerCreature);
+	//Add player to visibility list
+	VisibilityManager::instance()->addToVisibilityList(playerCreature);
 
 	//Login to jedi manager
 	JediManager::instance()->onPlayerLoggedIn(playerCreature);
+
+	if (getFrsData()->getRank() > 0) {
+		FrsManager* frsManager = zoneServer->getFrsManager();
+
+		if (frsManager != NULL) {
+			frsManager->deductDebtExperience(playerCreature);
+		}
+	}
 
 	playerCreature->notifyObservers(ObserverEventType::LOGGEDIN);
 
@@ -1270,8 +1297,8 @@ void PlayerObjectImplementation::notifyOffline() {
 		}
 	}
 
-	//Logout from visibility manager
-	VisibilityManager::instance()->logout(playerCreature);
+	//Remove player from visibility list
+	VisibilityManager::instance()->removeFromVisibilityList(playerCreature);
 
 	playerCreature->notifyObservers(ObserverEventType::LOGGEDOUT);
 
@@ -1982,7 +2009,7 @@ void PlayerObjectImplementation::addToBountyLockList(uint64 playerId) {
 }
 
 void PlayerObjectImplementation::removeFromBountyLockList(uint64 playerId, bool immediately) {
-	int tefTime = 15 * 60 * 1000;
+	int tefTime = FactionManager::TEFTIMER;
 	if (immediately) {
 		//Schedule tef removal to happen soon but delay it enough for any bh mission to be dropped correctly.
 		tefTime = 100;
@@ -2041,11 +2068,15 @@ Time PlayerObjectImplementation::getLastVisibilityUpdateTimestamp() {
 	return lastVisibilityUpdateTimestamp;
 }
 
-Time PlayerObjectImplementation::getLastPvpCombatActionTimestamp() {
-	return lastPvpCombatActionTimestamp;
+Time PlayerObjectImplementation::getLastBhPvpCombatActionTimestamp() {
+	return lastBhPvpCombatActionTimestamp;
 }
 
-void PlayerObjectImplementation::updateLastPvpCombatActionTimestamp() {
+Time PlayerObjectImplementation::getLastGcwPvpCombatActionTimestamp() {
+	return lastGcwPvpCombatActionTimestamp;
+}
+
+void PlayerObjectImplementation::updateLastPvpCombatActionTimestamp(bool updateGcwAction, bool updateBhAction) {
 	ManagedReference<CreatureObject*> parent = getParent().get().castTo<CreatureObject*>();
 
 	if (parent == NULL)
@@ -2053,8 +2084,15 @@ void PlayerObjectImplementation::updateLastPvpCombatActionTimestamp() {
 
 	bool alreadyHasTef = hasPvpTef();
 
-	lastPvpCombatActionTimestamp.updateToCurrentTime();
-	lastPvpCombatActionTimestamp.addMiliTime(300000); // 5 minutes
+	if(updateBhAction) {
+		lastBhPvpCombatActionTimestamp.updateToCurrentTime();
+		lastBhPvpCombatActionTimestamp.addMiliTime(FactionManager::TEFTIMER);
+	}
+
+	if(updateGcwAction) {
+		lastGcwPvpCombatActionTimestamp.updateToCurrentTime();
+		lastGcwPvpCombatActionTimestamp.addMiliTime(FactionManager::TEFTIMER);
+	}
 
 	schedulePvpTefRemovalTask();
 
@@ -2064,11 +2102,23 @@ void PlayerObjectImplementation::updateLastPvpCombatActionTimestamp() {
 	}
 }
 
-bool PlayerObjectImplementation::hasPvpTef() {
-	return !lastPvpCombatActionTimestamp.isPast();
+void PlayerObjectImplementation::updateLastBhPvpCombatActionTimestamp() {
+	updateLastPvpCombatActionTimestamp(false, true);
 }
 
-void PlayerObjectImplementation::schedulePvpTefRemovalTask(bool removeNow) {
+void PlayerObjectImplementation::updateLastGcwPvpCombatActionTimestamp() {
+	updateLastPvpCombatActionTimestamp(true, false);
+}
+
+bool PlayerObjectImplementation::hasPvpTef() {
+	return !lastGcwPvpCombatActionTimestamp.isPast() || hasBhTef();
+}
+
+bool PlayerObjectImplementation::hasBhTef() {
+	return !lastBhPvpCombatActionTimestamp.isPast();
+}
+
+void PlayerObjectImplementation::schedulePvpTefRemovalTask(bool removeGcwTefNow, bool removeBhTefNow) {
 	ManagedReference<CreatureObject*> parent = getParent().get().castTo<CreatureObject*>();
 
 	if (parent == NULL)
@@ -2078,23 +2128,30 @@ void PlayerObjectImplementation::schedulePvpTefRemovalTask(bool removeNow) {
 		pvpTefTask = new PvpTefRemovalTask(parent);
 	}
 
-	if (removeNow) {
-		lastPvpCombatActionTimestamp.updateToCurrentTime();
+	if (removeGcwTefNow || removeBhTefNow) {
+		if(removeGcwTefNow)
+			lastGcwPvpCombatActionTimestamp.updateToCurrentTime();
+		if(removeBhTefNow)
+			lastBhPvpCombatActionTimestamp.updateToCurrentTime();
 
 		if (pvpTefTask->isScheduled()) {
 			pvpTefTask->cancel();
 		}
+	}
 
-		pvpTefTask->execute();
-
-	} else if (!pvpTefTask->isScheduled()) {
+	if (!pvpTefTask->isScheduled()) {
 		if (hasPvpTef()) {
-			pvpTefTask->schedule(llabs(getLastPvpCombatActionTimestamp().miliDifference()));
+			auto gcwTefMs = getLastGcwPvpCombatActionTimestamp().miliDifference();
+			auto bhTefMs = getLastBhPvpCombatActionTimestamp().miliDifference();
+			pvpTefTask->schedule(llabs(gcwTefMs < bhTefMs ? gcwTefMs : bhTefMs));
 		} else {
 			pvpTefTask->execute();
 		}
 	}
+}
 
+void PlayerObjectImplementation::schedulePvpTefRemovalTask(bool removeNow) {
+	schedulePvpTefRemovalTask(removeNow, removeNow);
 }
 
 Vector3 PlayerObjectImplementation::getTrainerCoordinates() {

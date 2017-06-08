@@ -7,6 +7,7 @@
 
 #include "LuaPlayerObject.h"
 #include "engine/engine.h"
+#include "server/zone/managers/frs/FrsManager.h"
 #include "server/zone/managers/crafting/schematicmap/SchematicMap.h"
 #include "server/zone/objects/tangible/deed/eventperk/EventPerkDeed.h"
 #include "server/zone/objects/tangible/eventperk/Jukebox.h"
@@ -72,7 +73,11 @@ Luna<LuaPlayerObject>::RegType LuaPlayerObject::Register[] = {
 		{ "addSuiBox", &LuaPlayerObject::addSuiBox },
 		{ "removeSuiBox", &LuaPlayerObject::removeSuiBox },
 		{ "isJediTrainer", &LuaPlayerObject::isJediTrainer },
-		{ "getVisibility", &LuaPlayerObject::getVisibility},
+		{ "getVisibility", &LuaPlayerObject::getVisibility },
+		{ "setFrsCouncil", &LuaPlayerObject::setFrsCouncil },
+		{ "setFrsRank", &LuaPlayerObject::setFrsRank },
+		{ "getFrsRank", &LuaPlayerObject::getFrsRank },
+		{ "getFrsCouncil", &LuaPlayerObject::getFrsCouncil },
 		{ 0, 0 }
 };
 
@@ -646,6 +651,45 @@ int LuaPlayerObject::isJediTrainer(lua_State* L) {
 
 int LuaPlayerObject::getVisibility(lua_State* L) {
 	lua_pushnumber(L, realObject->getVisibility());
+
+	return 1;
+}
+
+int LuaPlayerObject::setFrsCouncil(lua_State* L) {
+	int councilType = lua_tointeger(L, -1);
+
+	FrsData* frsData = realObject->getFrsData();
+
+	frsData->setCouncilType(councilType);
+
+	return 0;
+}
+
+int LuaPlayerObject::setFrsRank(lua_State* L) {
+	int rank = lua_tointeger(L, -1);
+
+	FrsManager* frsManager = realObject->getZoneServer()->getFrsManager();
+
+	ManagedReference<CreatureObject*> player = realObject->getParentRecursively(SceneObjectType::PLAYERCREATURE).castTo<CreatureObject*>();
+
+	if (frsManager != NULL && player != NULL)
+		frsManager->setPlayerRank(player, rank);
+
+	return 0;
+}
+
+int LuaPlayerObject::getFrsRank(lua_State* L) {
+	FrsData* frsData = realObject->getFrsData();
+
+	lua_pushinteger(L, frsData->getRank());
+
+	return 1;
+}
+
+int LuaPlayerObject::getFrsCouncil(lua_State* L) {
+	FrsData* frsData = realObject->getFrsData();
+
+	lua_pushinteger(L, frsData->getCouncilType());
 
 	return 1;
 }

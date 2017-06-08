@@ -24,28 +24,6 @@ void VisibilityManager::removePlayerFromBountyList(CreatureObject* creature) {
 	missionManager->removePlayerFromBountyList(creature->getObjectID());
 }
 
-int VisibilityManager::calculateReward(CreatureObject* creature) {
-	int minReward = 25000; // Minimum reward for a player bounty
-	int maxReward = 250000; // Maximum reward for a player bounty
-
-	int reward = minReward;
-
-	Reference<PlayerObject*> ghost = creature->getSlottedObject("ghost").castTo<PlayerObject*>();
-
-	if (ghost != NULL) {
-		int skillPoints = ghost->getSpentJediSkillPoints();
-
-		reward = skillPoints * 1000;
-
-		if (reward < minReward)
-			reward = minReward;
-		else if (reward > maxReward)
-			reward = maxReward;
-	}
-
-	return reward;
-}
-
 float VisibilityManager::calculateVisibilityIncrease(CreatureObject* creature) {
 	Zone* zone = creature->getZone();
 
@@ -119,10 +97,6 @@ void VisibilityManager::decreaseVisibility(CreatureObject* creature) {
 				clearVisibility(creature);
 			} else {
 				ghost->setVisibility(ghost->getVisibility() - visibilityDecrease);
-
-				if (ghost->getVisibility() < falloffThreshold) {
-					removePlayerFromBountyList(creature);
-				}
 			}
 		}
 	}
@@ -135,7 +109,7 @@ VisibilityManager::VisibilityManager() : Logger("VisibilityManager") {
 	decayTask->schedule(visDecayTickRate * 1000);
 }
 
-void VisibilityManager::login(CreatureObject* creature) {
+void VisibilityManager::addToVisibilityList(CreatureObject* creature) {
 	//info("Logging in " + creature->getFirstName(), true);
 	Reference<PlayerObject*> ghost = creature->getSlottedObject("ghost").castTo<PlayerObject*>();
 
@@ -151,25 +125,29 @@ void VisibilityManager::login(CreatureObject* creature) {
 
 		locker.release();
 
-		if (creature->hasSkill("force_title_jedi_rank_02") && ghost->getVisibility() >= terminalVisThreshold) {
+		if (creature->hasSkill("force_title_jedi_rank_02") && (ghost->getVisibility() >= terminalVisThreshold)) {
 			// TODO: Readjust after FRS implementation.
 			// +100k per FRS level
-			int reward = calculateReward(creature);
-			addPlayerToBountyList(creature, reward);
+			addPlayerToBountyList(creature, ghost->calculateBhReward());
 		}
 	}
 }
 
-void VisibilityManager::logout(CreatureObject* creature) {
+float VisibilityManager::getTerminalVisThreshold() {
+	return terminalVisThreshold;
+}
+
+void VisibilityManager::removeFromVisibilityList(CreatureObject* creature) {
 	//info("Logging out " + creature->getFirstName(), true);
 	Locker locker(&visibilityListLock);
 
 	if (visibilityList.contains(creature->getObjectID())) {
 		//info("Dropping player " + String::valueOf(creature->getObjectID()) + " from visibility list.", true);
 		visibilityList.drop(creature->getObjectID());
-
-		removePlayerFromBountyList(creature);
 	}
+
+	if(!creature->isOnline())
+		removePlayerFromBountyList(creature);
 }
 
 void VisibilityManager::increaseVisibility(CreatureObject* creature, int visibilityMultiplier) {
@@ -188,7 +166,7 @@ void VisibilityManager::increaseVisibility(CreatureObject* creature, int visibil
 		//info("New visibility for " + creature->getFirstName() + " is " + String::valueOf(ghost->getVisibility()), true);
 		locker.release();
 
-		login(creature);
+		addToVisibilityList(creature);
 	}
 }
 
@@ -202,7 +180,7 @@ void VisibilityManager::clearVisibility(CreatureObject* creature) {
 		ghost->setVisibility(0);
 		locker.release();
 
-		logout(creature);
+		removeFromVisibilityList(creature);
 	}
 }
 

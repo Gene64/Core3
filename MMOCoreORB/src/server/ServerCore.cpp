@@ -118,9 +118,9 @@ void ServerCore::initialize() {
 			webServer = WebServer::instance();
 		}
 
-		NavMeshManager::instance()->initialize(configManager->getMaxNavMeshJobs());
-
 		ZoneServer* zoneServer = zoneServerRef.get();
+
+		NavMeshManager::instance()->initialize(configManager->getMaxNavMeshJobs(), zoneServer);
 
 		if (zoneServer != NULL) {
 			int zonePort = 44463;
@@ -268,6 +268,8 @@ void ServerCore::shutdown() {
 		statusServer = NULL;
 	}
 
+	NavMeshManager::instance()->stop();
+
 	Thread::sleep(5000);
 
 	objectManager->createBackup();
@@ -278,8 +280,6 @@ void ServerCore::shutdown() {
 	info("database backup done", true);
 
 	objectManager->cancelUpdateModifiedObjectsTask();
-
-	NavMeshManager::instance()->stop();
 
 	if (zoneServer != NULL) {
 		zoneServer->clearZones();

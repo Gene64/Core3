@@ -20,6 +20,7 @@
 
 #include "server/zone/managers/structure/StructureManager.h"
 #include "terrain/ProceduralTerrainAppearance.h"
+#include "server/zone/managers/collision/NavMeshManager.h"
 
 ZoneImplementation::ZoneImplementation(ZoneProcessServer* serv, const String& name) {
 	processor = serv;
@@ -395,7 +396,7 @@ int ZoneImplementation::getInRangeNavMeshes(float x, float y, SortedVector<Manag
 
 	for (int i = 0; i < entryObjects.size(); ++i) {
 		NavArea* obj = dynamic_cast<NavArea*>(entryObjects.get(i).get());
-		if (obj)
+		if (obj && obj->isNavMeshLoaded())
 			objects->put(obj);
 	}
 
@@ -794,6 +795,8 @@ void ZoneImplementation::updateCityRegions() {
 	bool log = cityRegionUpdateVector.size() > 0;
 	info("scheduling updates for " + String::valueOf(cityRegionUpdateVector.size()) + " cities", log);
 
+	bool forceRebuild = server->shouldDeleteNavAreas();
+
 	for (int i = 0; i < cityRegionUpdateVector.size(); ++i) {
 		CityRegion* city = cityRegionUpdateVector.get(i);
 
@@ -822,6 +825,8 @@ void ZoneImplementation::updateCityRegions() {
 
 			city->scheduleCitizenAssessment(seconds2);
 		}
+
+		city->createNavMesh(NavMeshManager::MeshQueue, forceRebuild);
 
 		if (!city->isRegistered())
 			continue;

@@ -233,28 +233,27 @@ public:
 
 		CombatManager* combatManager = CombatManager::instance();
 
-		bool shouldTef = false;
+		bool shouldGcwTef = false;
+		bool shouldBhTef = false;
 
-		if (creature->isPlayerCreature() && targetObject->isPlayerCreature()) {
-			if (!combatManager->areInDuel(creature, targetObject.castTo<CreatureObject*>())) {
-				shouldTef = true;
-			}
-		} else if (creature->isPet() && targetObject->isPlayerCreature()) {
-			ManagedReference<CreatureObject*> owner = creature->getLinkedCreature().get();
+		ManagedReference<CreatureObject*> attackingCreature = creature->isPet() ? creature->getLinkedCreature() : creature;
 
-			if (owner != NULL && owner->isPlayerCreature()) {
-				if (!combatManager->areInDuel(owner, targetObject.castTo<CreatureObject*>())) {
-					shouldTef = true;
-				}
-			}
-		} else if (creature->isPlayerCreature() && (targetObject->isPet() || targetObject->isVehicleObject())) {
-			ManagedReference<CreatureObject*> targetOwner = targetObject.castTo<CreatureObject*>()->getLinkedCreature().get();
+		ManagedReference<CreatureObject*> targetCreature = targetObject.castTo<CreatureObject*>();
+		ManagedReference<CreatureObject*> targetOwningCreature = targetCreature != NULL && (targetObject->isPet() || targetObject->isVehicleObject())
+				? targetCreature->getLinkedCreature() : targetCreature;
 
-			if (targetOwner != NULL && targetOwner->isPlayerCreature()) {
-				if (!combatManager->areInDuel(creature, targetOwner)) {
-					shouldTef = true;
-				}
-			}
+		if(
+			attackingCreature != NULL &&
+			targetOwningCreature != NULL &&
+			attackingCreature->isPlayerCreature() &&
+			targetOwningCreature->isPlayerCreature() &&
+			!combatManager->areInDuel(attackingCreature, targetOwningCreature)
+		) {
+			if(attackingCreature->getFaction() != targetOwningCreature->getFaction() && attackingCreature->getFactionStatus() & FactionStatus::OVERT && targetOwningCreature->getFactionStatus() & FactionStatus::OVERT)
+				shouldGcwTef = true;
+
+			if(attackingCreature->hasBountyMissionFor(targetOwningCreature) || targetOwningCreature->hasBountyMissionFor(attackingCreature))
+				shouldBhTef = true;
 		}
 
 		try {
@@ -280,22 +279,12 @@ public:
 		creature->removeBuff(STRING_HASHCODE("steadyaim"));
 
 		// Update PvP TEF Duration
-		if (shouldTef && creature->isPlayerCreature()) {
-			PlayerObject* ghost = creature->getPlayerObject().get();
+		if(shouldGcwTef || shouldBhTef) {
+			PlayerObject* ghost = attackingCreature->getPlayerObject();
 
-			if (ghost != NULL) {
-				ghost->updateLastPvpCombatActionTimestamp();
-			}
-		} else if (shouldTef && creature->isPet()) {
-			ManagedReference<CreatureObject*> owner = creature->getLinkedCreature().get();
-
-			if (owner != NULL && owner->isPlayerCreature()) {
-				PlayerObject* ownerGhost = owner->getPlayerObject().get();
-
-				if (ownerGhost != NULL) {
-					Locker olocker(owner, creature);
-					ownerGhost->updateLastPvpCombatActionTimestamp();
-				}
+			if(ghost != NULL) {
+				Locker olocker(attackingCreature, creature);
+				ghost->updateLastPvpCombatActionTimestamp(shouldGcwTef, shouldBhTef);
 			}
 		}
 

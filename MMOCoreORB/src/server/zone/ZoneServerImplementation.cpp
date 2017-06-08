@@ -30,6 +30,7 @@
 #include "server/zone/managers/director/DirectorManager.h"
 #include "server/zone/managers/city/CityManager.h"
 #include "server/zone/managers/structure/StructureManager.h"
+#include "server/zone/managers/frs/FrsManager.h"
 
 #include "server/chat/ChatManager.h"
 
@@ -249,6 +250,11 @@ void ZoneServerImplementation::startManagers() {
 	//Loads the FactionManager LUA Config.
 	FactionManager::instance()->loadData();
 
+	//Start global screen plays
+	DirectorManager::instance()->loadPersistentEvents();
+	DirectorManager::instance()->loadPersistentStatus();
+	DirectorManager::instance()->startGlobalScreenPlays();
+
 	cityManager->loadCityRegions();
 
 	for (int i = 0; i < zones->size(); ++i) {
@@ -258,12 +264,10 @@ void ZoneServerImplementation::startManagers() {
 		}
 	}
 
-	//Start global screen plays
-	DirectorManager::instance()->loadPersistentEvents();
-	DirectorManager::instance()->loadPersistentStatus();
-	DirectorManager::instance()->startGlobalScreenPlays();
-
 	auctionManager->initialize();
+
+	frsManager = new FrsManager(_this.getReferenceUnsafeStaticCast());
+	frsManager->initialize();
 }
 
 void ZoneServerImplementation::start(int p, int mconn) {
@@ -334,6 +338,7 @@ void ZoneServerImplementation::stopManagers() {
 	auctionManager = NULL;
 	petManager = NULL;
 	reactionManager = NULL;
+	frsManager = NULL;
 	creatureTemplateManager = NULL;
 	dnaManager = NULL;
 	stringIdManager = NULL;
